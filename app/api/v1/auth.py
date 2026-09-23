@@ -9,7 +9,7 @@ from app.schemas.user import (
     UserResponse,
     VerifyEmailForm,
 )
-from app.schemas.user import ResendVerificationCodeForm
+from app.schemas.user import ResendVerificationCodeForm, LoginForm
 
 router = APIRouter(
     prefix="/auth",
@@ -53,3 +53,13 @@ async def resend_verification_code(
         db=db,
         data=data,
     )
+
+@router.post("/login")
+async def user_login(
+    data: LoginForm,
+    db: AsyncSession = Depends(get_db),
+):
+    return await UserService.login(
+            db=db,
+            data=data,
+        )

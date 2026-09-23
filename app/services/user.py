@@ -3,18 +3,17 @@ from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password, create_access_token
 from app.core.verification import (
     generate_verification_code,
     hash_verification_code,
 )
+
 from app.models.user import UserModel
 from app.repositories.user import UserRepository
 from app.repositories.verification_code import VerificationCodeRepository
-from app.schemas.user import RegisterForm
 from app.core.verification import verify_verification_code
-from app.schemas.user import VerifyEmailForm
-from app.schemas.user import ResendVerificationCodeForm
+from app.schemas.user import ResendVerificationCodeForm, LoginForm, VerifyEmailForm, RegisterForm
 
 class UserService:
 
@@ -63,7 +62,7 @@ class UserService:
         )
 
         print(
-            "Verification code:",
+            "Verification code----------------------------->>>>>>>>>>>>>>>>>>>>>>>:",
             verification_code,
         )
 
@@ -191,8 +190,55 @@ class UserService:
             expires_at=expires_at,
         )
 
-        print("New verification code:", code)
+        print("New verification code--------------------------->>>>:", code)
 
         return {
             "message": "Verification code sent successfully"
+        }
+
+    @staticmethod
+    async def login(
+        db: AsyncSession,
+        data: LoginForm,
+    ) -> dict:
+
+        user = await UserRepository.get_by_email(
+            db=db,
+            email=data.email,
+        )
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
+            )
+
+        is_password_verified = verify_password(
+            data.password,
+            user.password_hash,
+        )
+
+        if not is_password_verified:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
+            )
+
+        if not user.is_verified:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Email is not verified",
+            )
+
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User account is inactive",
+            )
+
+        access_token = create_access_token(user.id)
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
         }

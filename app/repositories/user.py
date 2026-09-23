@@ -20,6 +20,19 @@ class UserRepository:
         return result.scalar_one_or_none()
 
     @staticmethod
+    async def get_by_id(
+        db: AsyncSession,
+        user_id: int,
+    ) -> UserModel | None:
+        result = await db.execute(
+            select(UserModel).where(
+                UserModel.id == user_id
+            )
+        )
+
+        return result.scalar_one_or_none()
+
+    @staticmethod
     async def create(
         db: AsyncSession,
         *,
