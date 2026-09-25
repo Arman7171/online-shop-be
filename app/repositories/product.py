@@ -7,29 +7,43 @@ from sqlalchemy.orm import selectinload
 class ProductRepository:
 
     @staticmethod
-    async def create(db: AsyncSession, data: ProductCreate, slug: str) -> ProductModel:
+    async def create(
+        db: AsyncSession,
+        data: ProductCreate,
+        slug: str,
+    ) -> ProductModel:
         product = ProductModel(
-            name = data.name,
-            description = data.description,
-            price = data.price,
-            stock = data.stock,
-            category_id = data.category_id,
-            is_active = data.is_active,
-            slug = slug
+            name=data.name,
+            description=data.description,
+            price=data.price,
+            stock=data.stock,
+            category_id=data.category_id,
+            is_active=data.is_active,
+            slug=slug,
         )
 
         db.add(product)
 
         await db.commit()
-        await db.refresh(product)
 
-        return product
+        created_product = await ProductRepository.get_by_id(
+            db=db,
+            product_id=product.id,
+        )
+
+        if created_product is None:
+            raise RuntimeError("Created product could not be loaded")
+
+        return created_product
 
     @staticmethod
     async def get_by_id(db: AsyncSession, product_id: int) -> ProductModel | None:
         result = await db.execute(
             select(ProductModel)
             .where(ProductModel.id == product_id)
+            .options(
+                selectinload(ProductModel.images)
+            )
         )
 
         return result.scalar_one_or_none()
