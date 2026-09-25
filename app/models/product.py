@@ -1,13 +1,23 @@
 from datetime import datetime
+from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, String, Text, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
-from app.models.product import ProductModel
 
-class CategoryModel(Base):
-    __tablename__ = "categories"
+
+class ProductModel(Base):
+    __tablename__ = "products"
 
     id: Mapped[int] = mapped_column(
         primary_key=True,
@@ -15,21 +25,38 @@ class CategoryModel(Base):
     )
 
     name: Mapped[str] = mapped_column(
-        String(100),
-        unique=True,
+        String(150),
         nullable=False,
     )
 
     slug: Mapped[str] = mapped_column(
-        String(120),
+        String(180),
         unique=True,
-        index=True,
         nullable=False,
     )
 
     description: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
+    )
+
+    price: Mapped[Decimal] = mapped_column(
+        Numeric(10, 2),
+        nullable=False,
+    )
+
+    stock: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        nullable=False,
+    )
+
+    category_id: Mapped[int] = mapped_column(
+        ForeignKey(
+            "categories.id",
+            ondelete="RESTRICT",
+        ),
+        nullable=False,
     )
 
     is_active: Mapped[bool] = mapped_column(
@@ -51,7 +78,13 @@ class CategoryModel(Base):
         nullable=False,
     )
 
-    products: Mapped[list["ProductModel"]] = relationship(
-        "ProductModel",
-        back_populates="category",
+    category = relationship(
+        "CategoryModel",
+        back_populates="products",
+    )
+
+    images = relationship(
+        "ProductImageModel",
+        back_populates="product",
+        cascade="all, delete-orphan",
     )
