@@ -425,7 +425,7 @@ source venv/bin/activate
 Start backend:
 
 ```bash
-python -m uvicorn app.main:app --reload
+python3 -m uvicorn app.main:app --reload
 ```
 
 After model changes:

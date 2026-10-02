@@ -5,6 +5,8 @@ from app.models.product import ProductModel
 from app.models.product_image import ProductImageModel
 from app.models.cart import CartModel
 from app.models.cart_item import CartItemModel
+from app.models.order import OrderModel
+from app.models.order_item import OrderItemModel
 
 __all__ = [
     "UserModel",
@@ -13,5 +15,7 @@ __all__ = [
     "ProductModel",
     "ProductImageModel",
     "CartModel",
-    "CartItemModel"
+    "CartItemModel",
+    "OrderModel",
+    "OrderItemModel",
 ]
